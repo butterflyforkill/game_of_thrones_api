@@ -10,7 +10,7 @@ characters = json_parcer.load_data('data.json')
 @app.route('/characters', methods=['GET'])
 def get_characters():
     """
-    Fetch all characters (with Pagination)
+    Fetch all characters (with Pagination, Filtering and Sorting)
     
     """
     name = request.args.get('name')
@@ -19,7 +19,9 @@ def get_characters():
     age_more_than = request.args.get('age_more_than')
     age_less_than = request.args.get('age_less_than')
     limit = int(request.args.get('limit', 20))
-    skip = int(request.args.get('offset', 0))
+    skip = int(request.args.get('skip', 0))
+    sort_by = request.args.get('sort_by')
+    sort_order = request.args.get('sort_order', 'asc')
 
     filtered_characters = [char for char in characters if
                        (not name or char['name'].lower() == name.lower()) and
@@ -27,7 +29,12 @@ def get_characters():
                        (not role or char['role'].lower() == role.lower()) and
                        (not age_more_than or char['age'] >= int(age_more_than)) and
                        (not age_less_than or char['age'] <= int(age_less_than))]
-
+    
+    if sort_by:
+        if sort_order == 'asc':
+            filtered_characters.sort(key=lambda x: x[sort_by])
+        else:
+            filtered_characters.sort(key=lambda x: x[sort_by], reverse=True)
 
     # If no limit or skip is provided, select 20 random characters from the filtered list
     if not limit and not skip:
