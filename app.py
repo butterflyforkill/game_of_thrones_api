@@ -6,6 +6,9 @@ import json_parcer
 app = Flask(__name__)
 FILE_PATH = 'data.json'
 characters = json_parcer.load_data(FILE_PATH)
+app.config.from_object('config')
+# db = SQLAlchemy(app)
+
 
 @app.route('/characters', methods=['GET'])
 def get_characters():
@@ -21,10 +24,6 @@ def get_characters():
             - A list of characters matching the specified
                 filters and pagination parameters.
             - An empty list if no characters match the criteria.
-
-    This function implements a REST API endpoint to retrieve a paginated
-    and filtered list of characters. It supports filtering by name,
-    house, role, age range, and sorting by a specified field in ascending or descending order.
     """
     name = request.args.get('name')
     house = request.args.get('house')
@@ -71,11 +70,6 @@ def get_character_by_id(id):
         JSON response:
             - 200 OK: If the character is found and returned.
             - 404 Not Found: If the character is not found.
-
-    This function searches for a character in the list of characters
-    based on the provided ID. If the character is found,
-    it returns the character's information as a JSON response.
-    Otherwise, it returns a 404 Not Found error.
     """
     for character in characters:
         if character['id'] == id:
@@ -95,11 +89,6 @@ def create_character():
         JSON response:
             - 201 Created: If the character is created successfully.
             - 400 Bad Request: If required fields are missing or invalid.
-
-    This function handles the creation of new characters in the application.
-    It validates the incoming JSON data, ensures that all required fields are
-    present and have valid values, and then adds the new character to the in-memory list.
-    The updated list is then written to a JSON file for persistence.
     """
     data = request.get_json()
     # Validate required fields
@@ -145,13 +134,6 @@ def update_character(id):
         JSON response:
             - 200 OK: If the character is updated successfully.
             - 404 Not Found: If the character is not found.
-
-    This function handles the update operation for a specific character.
-    It takes the ID of the character to be updated and the updated data
-    in the request body. The function iterates through the list of characters,
-    finds the character with the matching ID, updates the specified fields,
-    and writes the updated list to the JSON file. If the character is not found,
-    a 404 Not Found error is returned.
     """
     data = request.get_json()
     for character in characters:
@@ -201,12 +183,24 @@ def update_character(id):
 
 @app.route('/characters/<int:id>', methods=['DELETE'])
 def delete_character(id):
+    """
+    Deletes a character by ID.
+
+    Args:
+        id: The ID of the character to delete.
+
+    Returns:
+        JSON response:
+            - 200 OK: If the character is deleted successfully.
+            - 404 Not Found: If the character is not found.
+    """
     for character in characters:
         if character['id'] == id:
             characters.remove(character)
             json_parcer.write_file(FILE_PATH, characters)
             return jsonify({"message": f"Post with id {id} has been deleted successfully."}), 200
     return jsonify({"message": f"Post with id {id} was not found."}), 404
+
 
 if __name__ == '__main__':
     app.run(debug=True)
