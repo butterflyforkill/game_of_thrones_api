@@ -598,29 +598,5 @@
         "age": 70,
         "death": 7,
         "strength": "Cunning"
-    },
-    {
-        "id": 51,
-        "name": "",
-        "house": "",
-        "animal": "",
-        "symbol": "",
-        "nickname": "",
-        "role": "",
-        "age": 5,
-        "death": "",
-        "strength": ""
-    },
-    {
-        "id": 52,
-        "name": null,
-        "house": null,
-        "animal": null,
-        "symbol": null,
-        "nickname": null,
-        "role": null,
-        "age": 5,
-        "death": null,
-        "strength": null
     }
 ]

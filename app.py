@@ -197,8 +197,16 @@ def update_character(id):
             }
             return jsonify(response), 200
     return jsonify({"message": f"Post with id {id} was not found."}), 404
-    
-    
+
+
+@app.route('/characters/<int:id>', methods=['DELETE'])
+def delete_character(id):
+    for character in characters:
+        if character['id'] == id:
+            characters.remove(character)
+            json_parcer.write_file(FILE_PATH, characters)
+            return jsonify({"message": f"Post with id {id} has been deleted successfully."}), 200
+    return jsonify({"message": f"Post with id {id} was not found."}), 404
 
 if __name__ == '__main__':
     app.run(debug=True)
