@@ -4,8 +4,8 @@ import json_parcer
 
 
 app = Flask(__name__)
-
-characters = json_parcer.load_data('data.json')
+FILE_PATH = 'data.json'
+characters = json_parcer.load_data(FILE_PATH)
 
 @app.route('/characters', methods=['GET'])
 def get_characters():
@@ -83,7 +83,7 @@ def get_character_by_id(id):
     abort(404, description="Character not found")
 
 
-@app.route('/characters', methods=['GET','POST'])
+@app.route('/characters', methods=['POST'])
 def create_character():
     """
     Creates a new character and adds it to the list of characters.
@@ -128,14 +128,75 @@ def create_character():
         "strength": data.get('strength', None)
     }
     characters.append(new_character)
-    json_parcer.write_file('data.json', characters)
+    json_parcer.write_file(FILE_PATH, characters)
 
     return jsonify(new_character), 201
 
 
-@app.route()('/characters/<int:id>', methods=['PUT'])
-def edit_character(id):
-    pass
+@app.route('/characters/<int:id>', methods=['PUT'])
+def update_character(id):
+    """
+    Updates an existing character by ID.
+
+    Args:
+        id: The ID of the character to update.
+
+    Returns:
+        JSON response:
+            - 200 OK: If the character is updated successfully.
+            - 404 Not Found: If the character is not found.
+
+    This function handles the update operation for a specific character.
+    It takes the ID of the character to be updated and the updated data
+    in the request body. The function iterates through the list of characters,
+    finds the character with the matching ID, updates the specified fields,
+    and writes the updated list to the JSON file. If the character is not found,
+    a 404 Not Found error is returned.
+    """
+    data = request.get_json()
+    for character in characters:
+        if character['id'] == id:
+            if "name" in data:
+                character['name'] = data['name']
+                json_parcer.write_file(FILE_PATH, characters)
+            if "house" in data:
+                character['house'] = data['house']
+                json_parcer.write_file(FILE_PATH, characters)
+            if "animal" in data:
+                character['animal'] = data['animal']
+                json_parcer.write_file(FILE_PATH, characters)
+            if "symbol" in data:
+                character['symbol'] = data['symbol']
+                json_parcer.write_file(FILE_PATH, characters)
+            if "nickname" in data:
+                character['nickname'] = data['nickname']
+                json_parcer.write_file(FILE_PATH, characters)
+            if "role" in data:
+                character['role'] = data['role']
+                json_parcer.write_file(FILE_PATH, characters)
+            if "age" in data:
+                character['age'] = data['age']
+                json_parcer.write_file(FILE_PATH, characters)
+            if "death" in data:
+                character['death'] = data['death']
+                json_parcer.write_file(FILE_PATH, characters)
+            if "strength" in data:
+                character['strength'] = data['strength']
+                json_parcer.write_file(FILE_PATH, characters)
+            response = {
+                "id": character['id'],
+                "name": character['name'],
+                "house": character['house'],
+                "animal": character['animal'],
+                "symbol": character['symbol'],
+                "nickname": character['nickname'],
+                "role":character['role'],
+                "age": character['age'],
+                "death": character['death'],
+                "strength": character['strength']
+            }
+            return jsonify(response), 200
+    return jsonify({"message": f"Post with id {id} was not found."}), 404
     
     
 
