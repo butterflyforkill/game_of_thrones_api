@@ -1,6 +1,7 @@
 import random
 from flask import Flask, request, jsonify, abort
 import json_parcer
+import service as service
 
 
 app = Flask(__name__)
@@ -25,38 +26,24 @@ def get_characters():
                 filters and pagination parameters.
             - An empty list if no characters match the criteria.
     """
-    name = request.args.get('name')
-    house = request.args.get('house')
-    role = request.args.get('role')
-    age_more_than = request.args.get('age_more_than')
-    age_less_than = request.args.get('age_less_than')
-    limit = int(request.args.get('limit', 20))
-    skip = int(request.args.get('skip', 0))
+    filters = []
     sort_by = request.args.get('sort_by')
     sort_order = request.args.get('sort_order', 'asc')
+    limit = int(request.args.get('limit', 20))
+    skip = int(request.args.get('skip', 0))
 
-    filtered_characters = [char for char in characters if
-                       (not name or char['name'].lower() == name.lower()) and
-                       (not house or str(char['house']).lower().find(house.lower()) >= 0) and
-                       (not role or char['role'].lower() == role.lower()) and
-                       (not age_more_than or char['age'] >= int(age_more_than)) and
-                       (not age_less_than or char['age'] <= int(age_less_than))]
-    
+    for key, value in request.args.items():
+        if key != "sort_by" or key != "sort_order" or key != "limit" or key != 'skip':
+            filters.append({key: value})
+
+    characters = service.characters_filter(filters)
     if sort_by:
-        if sort_order == 'asc':
-            filtered_characters.sort(key=lambda x: x[sort_by])
-        else:
-            filtered_characters.sort(key=lambda x: x[sort_by], reverse=True)
+        characters = service.characters_sort(characters, sort_order, sort_by)
 
-    # If no limit or skip is provided, select 20 random characters from the filtered list
-    if not limit and not skip:
-        paginated_characters = random.sample(filtered_characters, 20)
-    else:
-        # Apply pagination to the filtered list
-        paginated_characters = filtered_characters[skip:skip + limit]
+    characters = characters.limit(limit).offset(skip).all()
 
-    return jsonify(paginated_characters)
-
+    return jsonify([character.serialize() for character in characters])
+        
 
 @app.route('/characters/<int:id>', methods=['GET'])
 def get_character_by_id(id):
