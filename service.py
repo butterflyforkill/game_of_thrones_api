@@ -1,6 +1,6 @@
-from .database import db
+from database import db
 from sqlalchemy.exc import SQLAlchemyError
-from .models import Character, House, Strength 
+from models import Character, House, Strength 
 from schemas import CharacterUpdate
 
 
@@ -40,8 +40,8 @@ def create_character(data_character):
         role=data_character['role'],
         age=data_character['age'],
         death=data_character.get('death', None),  # Handle optional death field
-        house_id=data_character['house_id'],
-        strength_id=data_character['strength_id'],
+        house_id=data_character['house'],
+        strength_id=data_character['strength'],
     )
     # Add the character to the database session
     db.session.add(character)

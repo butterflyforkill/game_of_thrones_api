@@ -6,7 +6,8 @@ db = SQLAlchemy()
 
 def create_database(app):
     with app.app_context():
-        print(f"Connecting to database: {app.config['SQLALCHEMY_DATABASE_URI']}")
+        db.init_app(app)
+        print(f"Connecting to database")
 
         inspector = inspect(db.engine)
 
@@ -23,7 +24,7 @@ def create_database(app):
         else:
             try:
                 # These imports are required for SQLAlchemy to create the tables
-                from .models import Character, House, Strength
+                from models import Character, House, Strength
                 db.create_all()
                 print('Database and tables created!')
             except Exception as e:

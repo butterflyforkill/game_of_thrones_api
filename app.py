@@ -1,15 +1,15 @@
-import random
 from flask import Flask, request, jsonify, abort
 import json_parcer
 import service as service
+import database
 from schemas import CharacterUpdate
 from pydantic import ValidationError
+from config import Config
 
 
 app = Flask(__name__)
-FILE_PATH = 'data.json'
-characters = json_parcer.load_data(FILE_PATH)
-app.config.from_object('config')
+app.config['SQLALCHEMY_DATABASE_URI'] = Config.SQLALCHEMY_DATABASE_URI
+database.create_database(app)
 # db = SQLAlchemy(app)
 
 
@@ -44,7 +44,7 @@ def get_characters():
 
     characters = characters.limit(limit).offset(skip).all()
 
-    return jsonify([character.serialize() for character in characters])
+    return jsonify([character.to_dict() for character in characters])
         
 
 @app.route('/characters/<int:id>', methods=['GET'])

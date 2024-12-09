@@ -1,5 +1,5 @@
 from sqlalchemy.sql import func
-from .database import db
+from database import db
 
 
 class Character(db.Model):
@@ -7,7 +7,7 @@ class Character(db.Model):
     
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(50), nullable=False, unique=True)
-    animal = db.Column(db.String(50), nullable=False, unique=True)
+    animal = db.Column(db.String(50), nullable=True, unique=True)
     symbol = db.Column(db.String(50), nullable=False, unique=True)
     nickname = db.Column(db.String(50), nullable=False, unique=True)
     role = db.Column(db.String(50), nullable=False, unique=True)
