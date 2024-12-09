@@ -15,6 +15,9 @@ class Character(db.Model):
     death = db.Column(db.Integer, nullable=True)
     house_id = db.Column(db.Integer, db.ForeignKey('houses.id'), nullable=False)
     strength_id = db.Column(db.Integer, db.ForeignKey('strengthes.id'), nullable=False)
+    
+    def to_dict(self):
+        return {column.name: getattr(self, column.name) for column in self.__table__.columns}
 
 
 class House(db.Model):

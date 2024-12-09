@@ -2,6 +2,8 @@ import random
 from flask import Flask, request, jsonify, abort
 import json_parcer
 import service as service
+from schemas import CharacterUpdate
+from pydantic import ValidationError
 
 
 app = Flask(__name__)
@@ -58,24 +60,33 @@ def get_character_by_id(id):
             - 200 OK: If the character is found and returned.
             - 404 Not Found: If the character is not found.
     """
-    for character in characters:
-        if character['id'] == id:
-            return jsonify(character)
-    abort(404, description="Character not found")
+    character_data = service.get_character(id)
+    if character_data:
+        return jsonify(character_data)
+    else:
+        abort(404, description="Character not found")
 
 
 @app.route('/characters', methods=['POST'])
 def create_character():
     """
-    Creates a new character and adds it to the list of characters.
+    Creates a new character.
 
-    Args:
-        None
+    Args: (data received from the request body)
+        name (str): The name of the character.
+        animal (str): The animal associated with the character.
+        symbol (str): The symbol of the character.
+        nickname (str): The nickname of the character.
+        role (str): The role of the character.
+        age (int): The age of the character.
+        death (int, optional): The year of the character's death (if applicable).
+        house_id (int): The ID of the house the character belongs to.
+        strength_id (int): The ID of the strength associated with the character.
 
     Returns:
         JSON response:
             - 201 Created: If the character is created successfully.
-            - 400 Bad Request: If required fields are missing or invalid.
+            - 400 Bad Request: If required data is missing or invalid.
     """
     data = request.get_json()
     # Validate required fields
@@ -90,82 +101,39 @@ def create_character():
             return jsonify({'error': 'Age must be a positive integer'}), 400
     except ValueError:
         return jsonify({'error': 'Age must be an integer'}), 400
-    
-    new_character = {
-        "id": len(characters) + 1,
-        "name": data.get('name', None),
-        "house": data.get('house', None),
-        "animal": data.get('animal', None),
-        "symbol": data.get('symbol', None),
-        "nickname": data.get('nickname', None),
-        "role": data.get('role', None),
-        "age": data.get('age', None),
-        "death": data.get('death', None),
-        "strength": data.get('strength', None)
-    }
-    characters.append(new_character)
-    json_parcer.write_file(FILE_PATH, characters)
-
-    return jsonify(new_character), 201
+    new_character = service.create_character(data)
+    if new_character:
+        return jsonify(new_character), 201
+    return jsonify(new_character), 400
 
 
 @app.route('/characters/<int:id>', methods=['PUT'])
 def update_character(id):
     """
-    Updates an existing character by ID.
+    Updates an existing character.
 
     Args:
-        id: The ID of the character to update.
+        id (int): The ID of the character to update.
+        data (dict): The updated character data (received from the request body).
 
     Returns:
         JSON response:
             - 200 OK: If the character is updated successfully.
+            - 400 Bad Request: If required data is missing or invalid.
             - 404 Not Found: If the character is not found.
     """
-    data = request.get_json()
-    for character in characters:
-        if character['id'] == id:
-            if "name" in data:
-                character['name'] = data['name']
-                json_parcer.write_file(FILE_PATH, characters)
-            if "house" in data:
-                character['house'] = data['house']
-                json_parcer.write_file(FILE_PATH, characters)
-            if "animal" in data:
-                character['animal'] = data['animal']
-                json_parcer.write_file(FILE_PATH, characters)
-            if "symbol" in data:
-                character['symbol'] = data['symbol']
-                json_parcer.write_file(FILE_PATH, characters)
-            if "nickname" in data:
-                character['nickname'] = data['nickname']
-                json_parcer.write_file(FILE_PATH, characters)
-            if "role" in data:
-                character['role'] = data['role']
-                json_parcer.write_file(FILE_PATH, characters)
-            if "age" in data:
-                character['age'] = data['age']
-                json_parcer.write_file(FILE_PATH, characters)
-            if "death" in data:
-                character['death'] = data['death']
-                json_parcer.write_file(FILE_PATH, characters)
-            if "strength" in data:
-                character['strength'] = data['strength']
-                json_parcer.write_file(FILE_PATH, characters)
-            response = {
-                "id": character['id'],
-                "name": character['name'],
-                "house": character['house'],
-                "animal": character['animal'],
-                "symbol": character['symbol'],
-                "nickname": character['nickname'],
-                "role":character['role'],
-                "age": character['age'],
-                "death": character['death'],
-                "strength": character['strength']
-            }
-            return jsonify(response), 200
-    return jsonify({"message": f"Post with id {id} was not found."}), 404
+    character = service.get_character(id)
+    if not character:
+        abort(404, description="Character not found")
+
+    try:
+        updated_data = CharacterUpdate(**request.get_json())
+    except ValidationError as e:
+        return jsonify({'error': str(e)}), 400
+    updated_character = service.update_character(updated_data, character)
+    if updated_character:
+        return jsonify(updated_character), 201
+    return jsonify(updated_character), 400     
 
 
 @app.route('/characters/<int:id>', methods=['DELETE'])
