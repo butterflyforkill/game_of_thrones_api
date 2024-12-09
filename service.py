@@ -1,5 +1,6 @@
 from database import db
 from sqlalchemy.exc import SQLAlchemyError
+from sqlalchemy import update
 from models import Character, House, Strength 
 from schemas import CharacterUpdate
 
@@ -58,15 +59,17 @@ def create_character(data_character):
     return character.to_dict()
 
 
-def update_character(update_data_character, data_character):
+def update_character(update_data_character, character_id):
     # Update character fields with validated data
-    for key, value in update_data_character.dict().items():
-        setattr(data_character, key, value)
-
     try:
+        stmt = (
+            update(Character)
+            .where(Character.id == character_id)
+            .values(**update_data_character.dict())
+        )
+        db.session.execute(stmt)
         db.session.commit()
+        return {'message': 'Character updated successfully'}
     except Exception as e:
-        db.session.rollback()
-        return {'error': f'Failed to update character: {str(e)}'}
-
-    return data_character.to_dict()
+        db.session.rollback()  # Rollback changes in case of error
+        return {'problem4=error': str(e)}

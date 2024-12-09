@@ -129,11 +129,17 @@ def update_character(id):
     try:
         updated_data = CharacterUpdate(**request.get_json())
     except ValidationError as e:
-        return jsonify({'error': str(e)}), 400
-    updated_character = service.update_character(updated_data, character)
+        return jsonify({'problem1=error': str(e)}), 400
+
+    try:
+        updated_character = service.update_character(updated_data, id)
+    except Exception as e:
+        return jsonify({'problem2=error': str(e)}), 400
+
     if updated_character:
-        return jsonify(updated_character), 201
-    return jsonify(updated_character), 400     
+        return jsonify(updated_character), 200
+    else:
+        return jsonify({'problem3=error': 'Failed to update character'}), 400 
 
 
 @app.route('/characters/<int:id>', methods=['DELETE'])
