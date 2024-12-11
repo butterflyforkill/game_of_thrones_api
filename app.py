@@ -30,15 +30,19 @@ def get_characters():
     """
     filters = []
     sort_by = request.args.get('sort_by')
-    sort_order = request.args.get('sort_order', 'asc')
+    sort_order = request.args.get('sort_order')
     limit = int(request.args.get('limit', 20))
     skip = int(request.args.get('skip', 0))
+    print(sort_by)
 
     for key, value in request.args.items():
-        if key != "sort_by" or key != "sort_order" or key != "limit" or key != 'skip':
+        if key not in ("sort_by", "sort_order", "limit", "skip"):
             filters.append({key: value})
+    print(filters)
+    # Call the filtering for house and strength filters inside the function
+    # Call other filters
+    characters = service.other_filters(service.house_strength_filters(filters), filters)
 
-    characters = service.characters_filter(filters)
     if sort_by:
         characters = service.characters_sort(characters, sort_order, sort_by)
 
@@ -94,9 +98,9 @@ def create_character():
     for field in required_fields:
         if field not in data:
             return jsonify({'error': f'Missing field: {field}'}), 400
-    # Validate data type for age
+
     try:
-        age = int(data['age'])
+        age = int(data['age']) # Validate data type for age
         if age < 0:
             return jsonify({'error': 'Age must be a positive integer'}), 400
     except ValueError:
@@ -128,18 +132,12 @@ def update_character(id):
 
     try:
         updated_data = CharacterUpdate(**request.get_json())
-    except ValidationError as e:
-        return jsonify({'problem1=error': str(e)}), 400
-
-    try:
         updated_character = service.update_character(updated_data, id)
-    except Exception as e:
-        return jsonify({'problem2=error': str(e)}), 400
-
-    if updated_character:
         return jsonify(updated_character), 200
-    else:
-        return jsonify({'problem3=error': 'Failed to update character'}), 400 
+    except ValidationError as e:
+        return jsonify({'error': str(e)}), 400
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
 
 
 @app.route('/characters/<int:id>', methods=['DELETE'])
@@ -155,12 +153,14 @@ def delete_character(id):
             - 200 OK: If the character is deleted successfully.
             - 404 Not Found: If the character is not found.
     """
-    for character in characters:
-        if character['id'] == id:
-            characters.remove(character)
-            json_parcer.write_file(FILE_PATH, characters)
-            return jsonify({"message": f"Post with id {id} has been deleted successfully."}), 200
-    return jsonify({"message": f"Post with id {id} was not found."}), 404
+    character = service.get_character(id)
+    if not character:
+        abort(404, description="Character not found")
+    try:
+        service.delete_character(id)
+        return jsonify({'message': 'Character deleted successfully'}), 200
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
 
 
 if __name__ == '__main__':

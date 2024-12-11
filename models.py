@@ -10,7 +10,7 @@ class Character(db.Model):
     animal = db.Column(db.String(50), nullable=True, unique=True)
     symbol = db.Column(db.String(50), nullable=False, unique=True)
     nickname = db.Column(db.String(50), nullable=False, unique=True)
-    role = db.Column(db.String(50), nullable=False, unique=True)
+    role = db.Column(db.String(50), nullable=False, unique=False)
     age = db.Column(db.Integer, nullable=False)
     death = db.Column(db.Integer, nullable=True)
     house_id = db.Column(db.Integer, db.ForeignKey('houses.id'), nullable=False)
