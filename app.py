@@ -4,12 +4,12 @@ import database
 from schemas import CharacterUpdate
 from pydantic import ValidationError
 from config import Config
+import os
 
-
+# Inizialisation
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = Config.SQLALCHEMY_DATABASE_URI
 database.create_database(app)
-# db = SQLAlchemy(app)
 
 
 @app.route('/characters', methods=['GET'])
@@ -117,13 +117,13 @@ def update_character(id):
 
     Args:
         id (int): The ID of the character to update.
-        data (dict): The updated character data (received from the request body).
 
     Returns:
         JSON response:
             - 200 OK: If the character is updated successfully.
-            - 400 Bad Request: If required data is missing or invalid.
-            - 404 Not Found: If the character is not found.
+            - 400 Bad Request: If the request data is invalid or missing required fields.
+            - 404 Not Found: If the character with the given ID is not found.
+            - 500 Internal Server Error: If an unexpected error occurs during the update process.
     """
     character = service.get_character(id)
     if not character:
@@ -151,6 +151,7 @@ def delete_character(id):
         JSON response:
             - 200 OK: If the character is deleted successfully.
             - 404 Not Found: If the character is not found.
+            - 500 Internal Server Error: If an unexpected error occurs.
     """
     character = service.get_character(id)
     if not character:

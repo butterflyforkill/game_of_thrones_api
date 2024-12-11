@@ -199,6 +199,18 @@ def delete_character(id):
 
 
 def add_house(house_data):
+    """
+    Adds a new house to the database.
+
+    Args:
+        house_data (dict): A dictionary containing the house name.
+
+    Returns:
+        dict: A dictionary indicating success or error.
+            - `{'message': 'House created successfully'}` on success.
+            - `{'error': 'Database error: ...'}` on database errors.
+            - `{'error': 'House with name "..." already exists.'}` on duplicate name.
+    """
     new_house = House(name=house_data['name'])
     db.session.add(new_house)
 
@@ -217,6 +229,18 @@ def add_house(house_data):
 
 
 def add_strength(strength_data):
+    """
+    Adds a new strength to the database.
+
+    Args:
+        strength_data (dict): A dictionary containing the strength name.
+
+    Returns:
+        dict: A dictionary indicating success or error.
+            - `{'message': 'Strength created successfully'}` on success.
+            - `{'error': 'Database error: ...'}` on database errors.
+            - `{'error': 'House with name "..." already exists.'}` on duplicate name.
+    """
     new_house = Strength(name=strength_data['name'])
     db.session.add(new_house)
 

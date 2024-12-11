@@ -1,5 +1,8 @@
 import os
+from dotenv import load_dotenv
+
+load_dotenv()
 
 class Config:
-    SQLALCHEMY_DATABASE_URI = 'postgresql://postgres:1234@localhost:5432/polinavasiuk'
+    SQLALCHEMY_DATABASE_URI = os.environ.get('SQLALCHEMY_DATABASE_URI')
     SQLALCHEMY_TRACK_MODIFICATIONS = False
