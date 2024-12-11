@@ -70,26 +70,92 @@ python app.py
 ### API Endpoints 
 **Characters** 
 - **GET** ```/characters```
-    - Parameters: 
+    - **Purpose**: Retrieve a list of characters with pagination and filtering options.
+    - **Parameters**: 
         - `sort_by` (optional): Field to sort by.
         - `sort_order` (optional): 'asc' or 'desc'.
         - `limit` (optional, default=20): Number of characters to return.
         - `skip` (optional, default=0): Number of characters to skip for pagination.
         - Additional query parameters for filtering.
+    - **Example Use**:
+      ```bash
+      GET /characters?sort_by=name&sort_order=asc&limit=10&skip=0&house=Stark
+      ```
 - **GET** ```/characters/{id}```
-    - Response: JSON representation of the character.
+    - **Purpose**: Retrieve details of a specific character by its ID.
+    - **Parameters**:
+        - `id` (path parameter): The ID of the character.
+    - **Example Use**:
+      ```bash
+      GET /characters/1
+      ```
 - **POST** ```/characters```
-    - Body: JSON with character details (refer to function docstring for required fields).
+    - **Purpose**: Create a new character entry.
+    - **Body**: JSON containing character details (e.g., name, house, animal, etc.).
+    - **Example Use**:
+      ```bash
+      POST /characters
+        {
+        "name": "Jon Snow",
+        "house": "Stark",
+        "animal": "Direwolf",
+        "symbol": "Ice",
+        "nickname": "The Bastard",
+        "role": "Knight",
+        "age": 24,
+        "death": null,
+        "strength": "StrengthID1"
+        }
+      ```
 - **PUT** ```/characters/{id}```
-    - Body: JSON with updated character details.
+    - **Purpose**: Update an existing character's details.
+    - **Parameters**:
+        - `id` (path parameter): The ID of the character to update.
+    - **Body**: JSON with updated character details.
+    - **Example Use**:
+      ```bash
+      PUT /characters/1
+      {
+        "name": "Jon Snow",
+        "age": 25
+      }
+      ```
 - **DELETE** ```/characters/{id}```
-    - Response: JSON message confirming deletion.
+    - **Purpose**: Delete a character by ID.
+    - **Parameters**:
+        - id (path parameter): The ID of the character to delete.
+    - **Response**: JSON message confirming deletion.
+    - **Example Use**:
+      ```bash
+      DELETE /characters/1
+      ```
 
 **House and Strength**
 - **POST** `/characters/house`
-    - Body: JSON with name for the house.
+    - **Purpose**: Add a new house for characters.
+    - **Body**: JSON with name for the house.
+    - **Example Use**:
+      ```bash
+      POST /characters/house
+      {
+        "name": "Targaryen"
+      }   
+      ```
 - **POST** `/characters/strength`
-    - Body: JSON with name for the strength.
+    - **Purpose**: Add a new strength attribute for characters.
+    - **Body**: JSON with name for the house.
+    - **Example Use**:
+      ```bash
+      POST /characters/strength
+      {
+        "name": "Bravery"
+      }   
+      ```
+**Notes on Usage**:
+- When making these requests, ensure you are using the correct HTTP method (GET, POST, PUT, DELETE).
+- For POST and PUT requests, the body should be in JSON format, and content type headers should be set accordingly (Content-Type: application/json).
+Error responses could include 400 for bad requests (invalid data), 404 for not found resources, and 500 for internal server errors.
+- Authentication or authorization headers might be required in a production environment, which aren't shown here but should be considered for security.
 
 **Error Handling**
 - 400 Bad Request: For missing or invalid data.
