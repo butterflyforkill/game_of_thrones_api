@@ -1,8 +1,7 @@
 from database import db
-from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy import update, or_
-from models import Character, House, Strength 
-from schemas import CharacterUpdate
+from sqlalchemy.exc import SQLAlchemyError, IntegrityError
+from models import Character, House, Strength
 
 
 def house_strength_filters(filters):
@@ -52,8 +51,17 @@ def other_filters(query, filters):
             if key == 'age':
                 # Handle filtering for integer 'age' column
                 conditions.append(Character.age == filter[key])
+            elif key == 'house':
+                conditions.append(Character.house.has(House.name.ilike(f"%{filter[key]}%")))
+            elif key == 'strength':
+                conditions.append(Character.strength.has(Strength.name.ilike(f"%{filter[key]}%")))
             elif key != 'house' and key != 'strength':
-                conditions.append(getattr(Character, key).ilike(f"%{filter[key]}%"))  
+                try:
+                    # Attempt to access the attribute and create a filter condition
+                    conditions.append(getattr(Character, key).ilike(f"%{filter[key]}%"))
+                except AttributeError:
+                    # Handle the case where the attribute doesn't exist
+                    print(f"Warning: Invalid filter key '{key}'") 
     if conditions:
         query = query.filter(or_(*conditions))
     return query
@@ -188,3 +196,39 @@ def delete_character(id):
     except Exception as e:
         db.session.rollback()  # Rollback changes in case of error
         return {'error': str(e)}
+
+
+def add_house(house_data):
+    new_house = House(name=house_data['name'])
+    db.session.add(new_house)
+
+    try:
+        db.session.commit()
+        return {'message': 'House created successfully'}
+    except SQLAlchemyError as e:
+        db.session.rollback()
+        if isinstance(e, IntegrityError) and 'duplicate key value violates unique constraint' in str(e):
+            return {'error': f'House with name "{house_data["name"]}" already exists.'}
+        else:
+            return {'error': f'Database error: {str(e)}'}
+    except Exception as e:
+        db.session.rollback()
+        return {'error': f'Unexpected error: {str(e)}'}
+
+
+def add_strength(strength_data):
+    new_house = Strength(name=strength_data['name'])
+    db.session.add(new_house)
+
+    try:
+        db.session.commit()
+        return {'message': 'Strength created successfully'}
+    except SQLAlchemyError as e:
+        db.session.rollback()
+        if isinstance(e, IntegrityError) and 'duplicate key value violates unique constraint' in str(e):
+            return {'error': f'House with name "{strength_data["name"]}" already exists.'}
+        else:
+            return {'error': f'Database error: {str(e)}'}
+    except Exception as e:
+        db.session.rollback()
+        return {'error': f'Unexpected error: {str(e)}'}

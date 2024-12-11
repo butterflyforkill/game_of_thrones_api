@@ -1,5 +1,4 @@
 from flask import Flask, request, jsonify, abort
-import json_parcer
 import service as service
 import database
 from schemas import CharacterUpdate
@@ -33,12 +32,10 @@ def get_characters():
     sort_order = request.args.get('sort_order')
     limit = int(request.args.get('limit', 20))
     skip = int(request.args.get('skip', 0))
-    print(sort_by)
 
     for key, value in request.args.items():
         if key not in ("sort_by", "sort_order", "limit", "skip"):
             filters.append({key: value})
-    print(filters)
     # Call the filtering for house and strength filters inside the function
     # Call other filters
     characters = service.other_filters(service.house_strength_filters(filters), filters)
@@ -47,6 +44,8 @@ def get_characters():
         characters = service.characters_sort(characters, sort_order, sort_by)
 
     characters = characters.limit(limit).offset(skip).all()
+    if not characters:
+        abort(404, description='Not Found: The requested page or resource could not be found')
 
     return jsonify([character.to_dict() for character in characters])
         
@@ -161,6 +160,29 @@ def delete_character(id):
         return jsonify({'message': 'Character deleted successfully'}), 200
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+
+
+# Endpoints to add house and strength
+@app.route('/characters/house', methods=['POST'])
+def add_character_house():
+    data = request.get_json()
+    if 'name' not in data:
+        return jsonify({'error': f'Missing field: {'name'}'}), 400
+    new_house = service.add_house(data)
+    if new_house:
+        return jsonify(new_house), 201
+    return jsonify(new_house), 400
+
+
+@app.route('/characters/strength', methods=['POST'])
+def add_character_strength():
+    data = request.get_json()
+    if 'name' not in data:
+        return jsonify({'error': f'Missing field: {'name'}'}), 400
+    new_strength = service.add_strength(data)
+    if new_strength:
+        return jsonify(new_strength), 201
+    return jsonify(new_strength), 400
 
 
 if __name__ == '__main__':
