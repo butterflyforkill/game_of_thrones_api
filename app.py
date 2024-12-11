@@ -78,18 +78,21 @@ def create_character():
     Request Body:
         A JSON object containing the following fields:
         - `name` (str, required): The name of the character.
-        - `animal` (str, optional): The animal associated with the character.
+        - `animal` (str, optional): The animal associated
+        with the character.
         - `symbol` (str, optional): The symbol of the character.
         - `nickname` (str, optional): The nickname of the character.
         - `role` (str, optional): The role of the character.
         - `age` (int, required): The age of the character.
         - `death` (int, optional): The year of the character's death.
         - `house` (int, required): The ID of the house the character belongs to.
-        - `strength` (int, required): The ID of the strength associated with the character.
+        - `strength` (int, required): The ID of the strength
+        associated with the character.
 
     Returns:
         - 201 Created: If the character is created successfully.
-        - 400 Bad Request: If the request body is invalid or missing required fields.
+        - 400 Bad Request: If the request body is invalid
+        or missing required fields.
         - 500 Internal Server Error: If an unexpected error occurs.
     """
     try:
@@ -113,9 +116,11 @@ def update_character(id):
     Returns:
         JSON response:
             - 200 OK: If the character is updated successfully.
-            - 400 Bad Request: If the request data is invalid or missing required fields.
+            - 400 Bad Request: If the request data is invalid
+            or missing required fields.
             - 404 Not Found: If the character with the given ID is not found.
-            - 500 Internal Server Error: If an unexpected error occurs during the update process.
+            - 500 Internal Server Error: If an unexpected
+            error occurs during the update process.
     """
     character = service.get_character(id)
     if not character:
@@ -158,6 +163,18 @@ def delete_character(id):
 # Endpoints to add house and strength
 @app.route('/characters/house', methods=['POST'])
 def add_character_house():
+    """
+    Adds a new house to the database.
+
+    **Request Body:**
+        A JSON object containing the following field:
+            - `name` (str, required): The name of the house.
+
+    **Returns:**
+        - 201 Created: If the house is created successfully.
+        - 400 Bad Request: If the 'name' field is missing
+        or unexpected error while adding to db.
+    """
     data = request.get_json()
     if 'name' not in data:
         return jsonify({'error': f'Missing field: {'name'}'}), 400
@@ -169,6 +186,18 @@ def add_character_house():
 
 @app.route('/characters/strength', methods=['POST'])
 def add_character_strength():
+    """
+    Adds a new strength to the database.
+
+    **Request Body:**
+        A JSON object containing the following field:
+        - `name` (str, required): The name of the strength.
+
+    **Returns:**
+        - 201 Created: If the strength is created successfully.
+        - 400 Bad Request: If the 'name' field is missing
+        or unexpected error while adding to db.
+    """
     data = request.get_json()
     if 'name' not in data:
         return jsonify({'error': f'Missing field: {'name'}'}), 400
