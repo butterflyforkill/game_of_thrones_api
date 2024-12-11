@@ -5,6 +5,15 @@ from sqlalchemy import inspect
 db = SQLAlchemy()
 
 def create_database(app):
+    """
+    Initializes the database and creates tables if they don't exist.
+
+    Args:
+        app (Flask): The Flask application instance.
+
+    Returns:
+        None
+    """
     with app.app_context():
         db.init_app(app)
         print(f"Connecting to database")

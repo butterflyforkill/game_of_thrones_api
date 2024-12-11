@@ -1,10 +1,10 @@
 from flask import Flask, request, jsonify, abort
 import service as service
 import database
-from schemas import CharacterUpdate
+from schemas import CharacterUpdate, CharacterCreate
 from pydantic import ValidationError
 from config import Config
-import os
+
 
 # Inizialisation
 app = Flask(__name__)
@@ -75,39 +75,31 @@ def create_character():
     """
     Creates a new character.
 
-    Args: (data received from the request body)
-        name (str): The name of the character.
-        animal (str): The animal associated with the character.
-        symbol (str): The symbol of the character.
-        nickname (str): The nickname of the character.
-        role (str): The role of the character.
-        age (int): The age of the character.
-        death (int, optional): The year of the character's death (if applicable).
-        house_id (int): The ID of the house the character belongs to.
-        strength_id (int): The ID of the strength associated with the character.
+    Request Body:
+        A JSON object containing the following fields:
+        - `name` (str, required): The name of the character.
+        - `animal` (str, optional): The animal associated with the character.
+        - `symbol` (str, optional): The symbol of the character.
+        - `nickname` (str, optional): The nickname of the character.
+        - `role` (str, optional): The role of the character.
+        - `age` (int, required): The age of the character.
+        - `death` (int, optional): The year of the character's death.
+        - `house` (int, required): The ID of the house the character belongs to.
+        - `strength` (int, required): The ID of the strength associated with the character.
 
     Returns:
-        JSON response:
-            - 201 Created: If the character is created successfully.
-            - 400 Bad Request: If required data is missing or invalid.
+        - 201 Created: If the character is created successfully.
+        - 400 Bad Request: If the request body is invalid or missing required fields.
+        - 500 Internal Server Error: If an unexpected error occurs.
     """
-    data = request.get_json()
-    # Validate required fields
-    required_fields = ['name', 'house', 'animal', 'symbol', 'nickname', 'role', 'age', 'death', 'strength']
-    for field in required_fields:
-        if field not in data:
-            return jsonify({'error': f'Missing field: {field}'}), 400
-
     try:
-        age = int(data['age']) # Validate data type for age
-        if age < 0:
-            return jsonify({'error': 'Age must be a positive integer'}), 400
-    except ValueError:
-        return jsonify({'error': 'Age must be an integer'}), 400
-    new_character = service.create_character(data)
-    if new_character:
+        character_data = CharacterCreate(**request.json)
+        new_character = service.create_character(character_data.dict())
         return jsonify(new_character), 201
-    return jsonify(new_character), 400
+    except ValidationError as e:
+        return jsonify({'error': str(e)}), 400
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
 
 
 @app.route('/characters/<int:id>', methods=['PUT'])
