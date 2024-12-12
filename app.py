@@ -1,18 +1,153 @@
 from flask import Flask, request, jsonify, abort
+import jwt
+from pydantic import ValidationError
+from datetime import datetime, timedelta
+from functools import wraps
 import service as service
 import database
 from schemas import CharacterUpdate, CharacterCreate
-from pydantic import ValidationError
 from config import Config
 
 
 # Inizialisation
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = Config.SQLALCHEMY_DATABASE_URI
+app.config['JWT_SECRET_KEY'] = Config.JWT_SECRET_KEY
 database.create_database(app)
 
 
+# In-memory user database (replace with a database query)
+users = [
+    {'username': 'user1', 'password': 'password1', 'role': 'user'},
+    {'username': 'admin', 'password': 'adminpassword', 'role': 'admin'},
+]
+
+
+# Authentication & Authorization
+def generate_jwt(username, role):
+    """
+    Generates a JSON Web Token (JWT) containing user information.
+
+    Args:
+        username (str): The username of the authenticated user.
+        role (str): The user's role (e.g., "admin", "user").
+
+    Returns:
+        str: The encoded JWT token.
+
+    Raises:
+        ValueError: If a secret key is not configured or invalid data is provided.
+    """
+    if not Config.JWT_SECRET_KEY:
+        raise ValueError("JWT secret key is not configured.")
+
+    payload = {
+        'username': username,
+        'role': role,
+        'exp': datetime.now() + timedelta(days=1)  # Set appropriate expiration time
+    }
+    token = jwt.encode(payload, Config.JWT_SECRET_KEY, algorithm='HS256')
+    return token.decode('utf-8')
+
+
+def decode_jwt(token):
+    """
+    Decodes a JWT token and retrieves user information if valid.
+
+    Args:
+        token (str): The encoded JWT token.
+
+    Returns:
+        dict | None: The decoded user information if the token is valid,
+            otherwise None.
+
+    Raises:
+        jwt.ExpiredSignatureError: If the token has expired.
+        jwt.InvalidTokenError: If the token is invalid.
+    """
+    try:
+        decoded_token = jwt.decode(token, Config.JWT_SECRET_KEY, algorithms=['HS256'])
+        return decoded_token
+    except jwt.ExpiredSignatureError:
+        return None
+    except jwt.InvalidTokenError:
+        return None
+
+
+def authenticate(username, password):
+    """
+    Authenticates a user based on username and password.
+
+    **Important:** This is a simplified in-memory authentication example.
+    For production use, implement secure password hashing (e.g., bcrypt)
+    and store hashed passwords in a database.
+
+    Args:
+        username (str): The username to authenticate.
+        password (str): The user's password for authentication.
+
+    Returns:
+        str | None: The user's role if authentication is successful,
+            otherwise None.
+    """
+    for user in users:
+        if user['username'] == username and user['password'] == password:
+            return user['role']
+    return None
+
+
+def protect_endpoint(func):
+    """
+    Decorator that verifies JWT authorization for a protected endpoint.
+
+    Args:
+        func: The endpoint function to be protected.
+
+    Returns:
+        function: The decorated function that performs JWT verification.
+    """
+    @wraps(func)
+    def decorated_function(*args, **kwargs):
+        token = request.headers.get('Authorization')
+        if not token:
+            return jsonify({'message': 'Token missing'}), 401
+
+        token = token.split(' ')[1]  # Extract the token from 'Bearer <token>'
+        decoded_token = decode_jwt(token)
+
+        if decoded_token:
+            return func(*args, **kwargs)
+        else:
+            return jsonify({'message': 'Invalid token'}), 401
+
+    return decorated_function
+
+
+@app.route('/login', methods=['POST'])
+def login():
+    """
+    Handles user login requests and generates JWT tokens on successful
+    authentication.
+
+    Returns:
+        JSON: A response containing the JWT token or an error message
+            if authentication fails.
+    """
+    username = request.json.get('username', None)
+    password = request.json.get('password', None)
+    
+    role = authenticate(username, password)
+
+    if role:
+        token = generate_jwt(username, role)
+        return jsonify({'token': token})
+    else:
+        return jsonify({'message': 'Invalid credentials'}), 401
+
+
+# Endpoints
 @app.route('/characters', methods=['GET'])
+@protect_endpoint
 def get_characters():
     """
     Fetches a list of characters based on specified
@@ -51,6 +186,7 @@ def get_characters():
         
 
 @app.route('/characters/<int:id>', methods=['GET'])
+@protect_endpoint
 def get_character_by_id(id):
     """
     Retrieves a character by its ID.
@@ -71,6 +207,7 @@ def get_character_by_id(id):
 
 
 @app.route('/characters', methods=['POST'])
+@protect_endpoint
 def create_character():
     """
     Creates a new character.
@@ -106,6 +243,7 @@ def create_character():
 
 
 @app.route('/characters/<int:id>', methods=['PUT'])
+@protect_endpoint
 def update_character(id):
     """
     Updates an existing character.
@@ -137,6 +275,7 @@ def update_character(id):
 
 
 @app.route('/characters/<int:id>', methods=['DELETE'])
+@protect_endpoint
 def delete_character(id):
     """
     Deletes a character by ID.
@@ -162,6 +301,7 @@ def delete_character(id):
 
 # Endpoints to add house and strength
 @app.route('/characters/house', methods=['POST'])
+@protect_endpoint
 def add_character_house():
     """
     Adds a new house to the database.
@@ -185,6 +325,7 @@ def add_character_house():
 
 
 @app.route('/characters/strength', methods=['POST'])
+@protect_endpoint
 def add_character_strength():
     """
     Adds a new strength to the database.
