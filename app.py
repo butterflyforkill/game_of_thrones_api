@@ -47,7 +47,7 @@ def generate_jwt(username, role):
         'exp': datetime.now() + timedelta(days=1)  # Set appropriate expiration time
     }
     token = jwt.encode(payload, Config.JWT_SECRET_KEY, algorithm='HS256')
-    return token.decode('utf-8')
+    return token
 
 
 def decode_jwt(token):
