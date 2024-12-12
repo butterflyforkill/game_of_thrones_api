@@ -47,7 +47,7 @@ A Flask-based RESTful API for managing characters in a fictional or game univers
     ```
 
 4. **Configure the environment:**
-    - Adjust the SQLALCHEMY_DATABASE_URI in your Config class or via environment variables for different deployment environments.
+    - Adjust the `SQLALCHEMY_DATABASE_URI` and `JWT_SECRET_KEY` in your `Config` class or via environment variables for different deployment environments.
 
 5. **Initialize the database:**
     ```bash
@@ -66,6 +66,47 @@ Or if you're running directly from the script:
 ```bash
 python app.py
 ```
+
+### Authentication and Security
+- **Authentication**: 
+  - The application now uses JWT (JSON Web Tokens) for authentication. Users must log in to receive a token which they need to include in the `Authorization` header for subsequent API calls.
+- **Login Endpoint**:
+  - **POST** `/login`: Users can authenticate by providing a `username` and `password` in the request body. If successful, they receive a JWT token.
+    - **Example Use**:
+    ```bash
+    POST /login
+    {
+      "username": "user1",
+      "password": "password1"
+    }
+    ```
+    - **Response**:
+    ```json
+    {
+      "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6InVzZXIxI[...]"
+    }
+    ```
+- **Token Usage**:
+  - For protected endpoints, clients must include the JWT in the `Authorization` header with the `Bearer` scheme:
+  ```bash
+  GET /characters
+  Authorization: Bearer <your_jwt_token>
+  ```
+
+### Updated Endpoints Information
+- **Protected Endpoints**: 
+  - All character-related endpoints (`/characters`, `/characters/{id}` etc.) now require authentication. Add a note that these endpoints are secured and require a valid JWT token for access.
+
+### New Configuration
+- **Config Changes**:
+  - Mention that the application now uses `JWT_SECRET_KEY` from `Config` which must be securely set for JWT token signing and verification.
+
+### Security Notes
+- **Security Considerations**:
+  - The authentication system uses a simple in-memory user database for demonstration purposes. In a production environment, replace this with secure storage of hashed passwords and a proper database backend.
+  - Emphasize the importance of securing the `JWT_SECRET_KEY` and never exposing it in client-side code or version control systems.
+
+
 
 ### API Endpoints 
 **Characters** 
@@ -151,13 +192,27 @@ python app.py
         "name": "Bravery"
       }   
       ```
-**Notes on Usage**:
-- When making these requests, ensure you are using the correct HTTP method (GET, POST, PUT, DELETE).
-- For POST and PUT requests, the body should be in JSON format, and content type headers should be set accordingly (Content-Type: application/json).
-Error responses could include 400 for bad requests (invalid data), 404 for not found resources, and 500 for internal server errors.
-- Authentication or authorization headers might be required in a production environment, which aren't shown here but should be considered for security.
 
 **Error Handling**
 - 400 Bad Request: For missing or invalid data.
 - 404 Not Found: When trying to access non-existent resources.
 - 500 Internal Server Error: For unexpected errors.
+
+
+### Example of Authenticated Request
+You could add examples or a section on how to make authenticated requests:
+1. **Login to get JWT Token:**
+   ```bash
+   curl -X POST -H "Content-Type: application/json" -d '{"username":"user1", "password":"password1"}' http://localhost:5000/login
+   ```
+2. **Use the JWT Token to Access Protected Endpoints:**
+   ```bash
+   curl -X GET -H "Authorization: Bearer <JWT_TOKEN_HERE>" http://localhost:5000/characters
+   ```
+
+**Notes on Usage**:
+- When making these requests, ensure you are using the correct HTTP method (GET, POST, PUT, DELETE).
+- For POST and PUT requests, the body should be in JSON format, and content type headers should be set accordingly (Content-Type: application/json).
+Error responses could include 400 for bad requests (invalid data), 404 for not found resources, and 500 for internal server errors.
+- Authentication or authorization headers required in a production environment.
+
